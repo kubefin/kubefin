@@ -22,7 +22,7 @@ require (
 	k8s.io/component-base v0.28.4
 	k8s.io/klog/v2 v2.110.1
 	k8s.io/metrics v0.28.4
-	kubefin.dev/go-tools v0.1.7
+	kubefin.dev/go-tools v0.1.8-0.20240102133236-04490d3c6879
 	layeh.com/gopher-json v0.0.0-20201124131017-552bb3c4c3bf
 	sigs.k8s.io/controller-tools v0.13.0
 )

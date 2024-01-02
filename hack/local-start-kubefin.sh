@@ -57,13 +57,11 @@ docker build -f "${REPO_ROOT}"/dashboard/Dockerfile -t kubefin/kubefin-dashboard
 
 # Download necessary images(speed up the launch time)
 docker pull otel/opentelemetry-collector-contrib:0.72.0
-docker pull kubefin/kubefin-dashboard:latest
 docker pull grafana/grafana:9.1.0
 docker pull grafana/mimir:2.6.0
 
 kind load docker-image otel/opentelemetry-collector-contrib:0.72.0 --name kubefin-server
 kind load docker-image otel/opentelemetry-collector-contrib:0.72.0 --name cluster-1
-kind load docker-image kubefin/kubefin-dashboard:latest --name kubefin-server
 kind load docker-image grafana/grafana:9.1.0 --name kubefin-server
 kind load docker-image grafana/mimir:2.6.0 --name kubefin-server
 kind load docker-image kubefin/kubefin-dashboard:devel --name kubefin-server
