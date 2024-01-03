@@ -30,14 +30,15 @@ func RegisterAgentMetricsCollector(ctx context.Context,
 	options *options.AgentOptions,
 	coreResourceInformerLister *options.CoreResourceInformerLister,
 	provider cloudprice.CloudProviderInterface,
-	metricsClientList *types.MetricsClientList) {
+	metricsClientList *types.MetricsClientList) error {
 	usageMetricsCache := metricscache.NewClusterResourceUsageMetricsCache(ctx, options, metricsClientList)
 	core.RegisterClusterLevelMetricsCollection(options, provider, coreResourceInformerLister)
 	core.RegisterPodLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache)
 	core.RegisterNodeLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache)
-	core.RegisterWorkloadLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache, metricsClientList)
+	if err := core.RegisterWorkloadLevelMetricsCollection(ctx, options, provider,
+		coreResourceInformerLister, usageMetricsCache, metricsClientList); err != nil {
+		return err
+	}
 
-	go func() {
-		usageMetricsCache.Start()
-	}()
+	return nil
 }
