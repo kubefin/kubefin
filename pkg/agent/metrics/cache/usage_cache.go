@@ -58,7 +58,7 @@ type ClusterResourceUsageMetricsCache struct {
 func NewClusterResourceUsageMetricsCache(ctx context.Context,
 	agentOptions *options.AgentOptions,
 	metricsClientList *types.MetricsClientList) *ClusterResourceUsageMetricsCache {
-	return &ClusterResourceUsageMetricsCache{
+	usageMetricsCache := &ClusterResourceUsageMetricsCache{
 		ctx:           ctx,
 		metricsClient: metricsClientList.MetricsClient,
 		options:       agentOptions,
@@ -67,6 +67,9 @@ func NewClusterResourceUsageMetricsCache(ctx context.Context,
 		nodeMutex:     sync.RWMutex{},
 		nodesUsage:    []ResourceUsageMetric{},
 	}
+	go usageMetricsCache.Start()
+
+	return usageMetricsCache
 }
 
 func (c *ClusterResourceUsageMetricsCache) Start() {

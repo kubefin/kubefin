@@ -129,7 +129,10 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 		k8sFactory := informers.NewSharedInformerFactory(client, 0)
 		kubefinFactory := kubefininformer.NewSharedInformerFactory(kubefinClient, 0)
 		coreResourceInformerLister := getAllCoreResourceLister(k8sFactory, kubefinFactory)
-		metrics.RegisterAgentMetricsCollector(ctx, opts, coreResourceInformerLister, provider, metricsClientList)
+		if err := metrics.RegisterAgentMetricsCollector(ctx, opts, coreResourceInformerLister,
+			provider, metricsClientList); err != nil {
+			klog.Fatalf("Register agent metrics collector error:%v", err)
+		}
 
 		stopCh := ctx.Done()
 		k8sFactory.Start(stopCh)

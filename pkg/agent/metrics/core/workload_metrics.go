@@ -19,9 +19,12 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"sync"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -87,6 +90,9 @@ type workloadMetricsCollector struct {
 	dynamicClient     dynamic.Interface
 	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache
 	provider          cloudprice.CloudProviderInterface
+
+	mapperMutex    sync.RWMutex
+	resourceMapper meta.RESTMapper
 
 	podLister               listercorev1.PodLister
 	nodeLister              listercorev1.NodeLister
@@ -370,13 +376,9 @@ func (c *workloadMetricsCollector) parseCustomTargetToGVR(target insightv1alpha1
 	}
 	gk := schema.GroupKind{Group: gv.Group, Kind: target.Kind}
 
-	groupResources, err := restmapper.GetAPIGroupResources(c.discoveryClient)
-	if err != nil {
-		klog.V(4).Infof("Get api group resources error:%v", err)
-		return schema.GroupVersionResource{}, err
-	}
-	mapper := restmapper.NewDiscoveryRESTMapper(groupResources)
-	gvr, err := mapper.RESTMapping(gk, gv.Version)
+	c.mapperMutex.RLock()
+	defer c.mapperMutex.RUnlock()
+	gvr, err := c.resourceMapper.RESTMapping(gk, gv.Version)
 	if err != nil {
 		klog.V(6).Infof("Error getting GVR: %s", err.Error())
 		return schema.GroupVersionResource{}, err
@@ -428,11 +430,55 @@ func (c *workloadMetricsCollector) collectResourceRequestMetrics(pods []*corev1.
 	}
 }
 
-func RegisterWorkloadLevelMetricsCollection(agentOptions *options.AgentOptions,
+func (c *workloadMetricsCollector) getClusterResourceMapper() (meta.RESTMapper, error) {
+	groupResources, err := restmapper.GetAPIGroupResources(c.discoveryClient)
+	if err != nil {
+		klog.V(4).Infof("Get api group resources error:%v", err)
+		return nil, err
+	}
+	mapper := restmapper.NewDiscoveryRESTMapper(groupResources)
+	return mapper, nil
+}
+
+func (c *workloadMetricsCollector) refreshResourceMapper(ctx context.Context) error {
+	resourceMapper, err := c.getClusterResourceMapper()
+	if err != nil {
+		return err
+	}
+	c.resourceMapper = resourceMapper
+
+	ticker := time.NewTicker(time.Minute * 3)
+	defer ticker.Stop()
+	// The API resources may change during the lifetime of the agent, so we need to refresh the resource mapper periodically.
+	// Like the users install a new CRD, or the CRD is deleted.
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				resourceMapper, err := c.getClusterResourceMapper()
+				if err != nil {
+					klog.Errorf("Get cluster resource mapper error:%v", err)
+					continue
+				}
+
+				c.mapperMutex.Lock()
+				c.resourceMapper = resourceMapper
+				c.mapperMutex.Unlock()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return nil
+}
+
+func RegisterWorkloadLevelMetricsCollection(ctx context.Context,
+	agentOptions *options.AgentOptions,
 	provider cloudprice.CloudProviderInterface,
 	coreResourceInformerLister *options.CoreResourceInformerLister,
 	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache,
-	metricsClientList *types.MetricsClientList) {
+	metricsClientList *types.MetricsClientList) error {
 	workloadMetricsCollector := &workloadMetricsCollector{
 		clusterId:               agentOptions.ClusterId,
 		clusterName:             agentOptions.ClusterName,
@@ -447,6 +493,10 @@ func RegisterWorkloadLevelMetricsCollection(agentOptions *options.AgentOptions,
 		daemonSetLister:         coreResourceInformerLister.DaemonSetLister,
 		customWorkloadCfgLister: coreResourceInformerLister.CustomWorkloadCfgLister,
 	}
+	if err := workloadMetricsCollector.refreshResourceMapper(ctx); err != nil {
+		return err
+	}
 
 	prometheus.MustRegister(workloadMetricsCollector)
+	return nil
 }
