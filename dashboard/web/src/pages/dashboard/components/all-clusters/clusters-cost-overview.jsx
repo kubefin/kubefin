@@ -38,7 +38,7 @@ function TotalComputeCostInfo() {
       }
     >
       <p>
-        All your EC2 spend
+        All costs of your clusters
       </p>
     </HelpPanel>
   );
