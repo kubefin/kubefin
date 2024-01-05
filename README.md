@@ -78,16 +78,22 @@ Full documentation is available on the [KubeFin website](https://kubefin.dev).
 
 ## Community
 
-We want your contributions and suggestions! One of the easiest ways to contribute is to participate in discussions on the Github Issues/Discussion, chat on IM or the bi-weekly community calls. For more information on the community engagement, developer and contributing guidelines and more, head over to the KubeFin community repo.
+We want your contributions and suggestions! One of the easiest ways to contribute is to participate in discussions on the Github Issues/Discussion, chat on IM or the bi-weekly community calls. For more information on the community engagement, developer and contributing guidelines and more, head over to the [KubeFin community repo](https://github.com/kubefin/community).
 
-## Contact Us
+### Contact Us
 
 Reach out with any questions you may have and we'll make sure to answer them as soon as possible!
 
-- Slack: [KubeFin Slack](https://kubefin.slack.com)
+- Slack: [CNCF Slack KubeFin channel](https://app.slack.com/client/T08PSQ7BQ/C06C56XDM63)
 - Wechat Group (*Chinese*): Broker wechat to add you into the user group.
 
   <img src="https://kubefin.dev/img/kubefin-assistant.jpg" width="200" />
+
+### Community Call
+
+Every two weeks we host a community call to showcase new features, review upcoming milestones, and engage in a Q&A. All are welcome!
+
+***Coming soon!...***
 
 ## Contributing
 
