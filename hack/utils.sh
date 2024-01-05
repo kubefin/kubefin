@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KUBEFIN_GO_PACKAGE="github.com/kubefin/kubefin"
+KUBEFIN_GO_PACKAGE="kubefin.dev/kubefin"
 
 KUBEFIN_TARGET_SOURCE=(
   kubefin-agent=cmd/kubefin-agent
@@ -138,10 +138,10 @@ function version_ldflags() {
     GIT_TREESTATE="dirty"
   fi
   BUILDDATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-  LDFLAGS="-X github.com/kubefin/kubefin/pkg/version.gitVersion=${GIT_VERSION} \
-                        -X github.com/kubefin/kubefin/pkg/version.gitCommit=${GIT_COMMIT_HASH} \
-                        -X github.com/kubefin/kubefin/pkg/version.gitTreeState=${GIT_TREESTATE} \
-                        -X github.com/kubefin/kubefin/pkg/version.buildDate=${BUILDDATE}"
+  LDFLAGS="-X kubefin.dev/kubefin/pkg/version.gitVersion=${GIT_VERSION} \
+                        -X kubefin.dev/kubefin/pkg/version.gitCommit=${GIT_COMMIT_HASH} \
+                        -X kubefin.dev/kubefin/pkg/version.gitTreeState=${GIT_TREESTATE} \
+                        -X kubefin.dev/kubefin/pkg/version.buildDate=${BUILDDATE}"
   echo $LDFLAGS
 }
 
